@@ -1,0 +1,522 @@
+# COSC 315 Database Detectives
+Name: Grace Engel
+Date: 1/28/2026
+
+## Task Results
+
+### Task 2 - Inventory the Database
+Link to Finalized DrawSQL ERD: https://drawsql.app/teams/judith-grace/diagrams/database-detective
+
+How many tables exist: 11
+
+Which tables appear to represent core entities vs. supporting or join tables: These represent the "core entities"- Client Staff, Recording, Sale, Release, Creator, and Collection. Supporting tables, include Style and Format. SaleItem and CollectionItem faLL under join tables.
+
+Are there naming patterns that suggest relationships: The naming patterns make relationships easy to understand. Most tables use an “Id” field as a primary key, and those same names appear in other tables to show connections between them (like ClientId or RecordingId). Tables such as SaleItem and CollectionItem link two main tables together, which suggests many-to-many relationships. Overall, the consistent naming helps show how the tables are related without needing extra explanation.
+
+### Task 3 - Hypothesize and Test Relationships
+HYPOTHESIS: Based on column names and data types, Sale.ClientId appears to function as a foreign key referencing Client.ClientId. This suggests a one-to-many relationship in which one client can be associated with multiple sales, while each sale is associated with exactly one client.
+
+SELECT Sale.SaleId, Client.FirstName, Client.LastName
+FROM Sale
+JOIN Client ON Sale.ClientId = Client.ClientId
+LIMIT 15; 
++--------+-----------+------------+
+| SaleId | FirstName | LastName   |
++--------+-----------+------------+
+|     98 | Luís      | Gonçalves  |
+|    121 | Luís      | Gonçalves  |
+|    143 | Luís      | Gonçalves  |
+|    195 | Luís      | Gonçalves  |
+|    316 | Luís      | Gonçalves  |
+|    327 | Luís      | Gonçalves  |
+|    382 | Luís      | Gonçalves  |
+|      1 | Leonie    | Köhler     |
+|     12 | Leonie    | Köhler     |
+|     67 | Leonie    | Köhler     |
+|    196 | Leonie    | Köhler     |
+|    219 | Leonie    | Köhler     |
+|    241 | Leonie    | Köhler     |
+|    293 | Leonie    | Köhler     |
+|     99 | François  | Tremblay   |
++--------+-----------+------------+ 
+
+What evidence supports or contradicts each hypothesis?
+My hypothesis is supported by the join results, that show multiple sales associated with the same client and no sales without client information. There wasn't any evidence I found that contradicts my hypothesis.
+
+Do joins behave as expected?
+The join worked as expected, showing one row for each sale along with the correct client information.
+
+Are there orphaned records?
+No orphaned records were found. Every sale matched to a client when joined using ClientId.
+SELECT *
+FROM Sale s
+LEFT JOIN Client c
+  ON s.ClientId = c.ClientId
+WHERE c.ClientId IS NULL;
+
+
+Do joins unexpectedly multiply rows?
+The join did not create any unexpected extra rows. Each sale appears only once, and client names repeat only because clients can have multiple sales.
+
+### Task 4 - Aggregation & Uniqueness Analysis
+Based off the past relationship I saw, I assumed that the number of sales per client would vary, some will have many purchases while others have very few.
+SELECT ClientId, COUNT(*) AS NumSales
+FROM Sale
+GROUP BY ClientId;
++----------+----------+
+| ClientId | NumSales |
++----------+----------+
+|        1 |        7 |
+|        2 |        7 |
+|        3 |        7 |
+|        4 |        7 |
+|        5 |        7 |
+|        6 |        7 |
+|        7 |        7 |
+|        8 |        7 |
+|        9 |        7 |
+|       10 |        7 |
+|       11 |        7 |
+|       12 |        7 |
+|       13 |        7 |
+|       14 |        7 |
+|       15 |        7 |
+|       16 |        7 |
+|       17 |        7 |
+|       18 |        7 |
+|       19 |        7 |
+|       20 |        7 |
+|       21 |        7 |
+|       22 |        7 |
+|       23 |        7 |
+|       24 |        7 |
+|       25 |        7 |
+|       26 |        7 |
+|       27 |        7 |
+|       28 |        7 |
+|       29 |        7 |
+|       30 |        7 |
+|       31 |        7 |
+|       32 |        7 |
+|       33 |        7 |
+|       34 |        7 |
+|       35 |        7 |
+|       36 |        7 |
+|       37 |        7 |
+|       38 |        7 |
+|       39 |        7 |
+|       40 |        7 |
+|       41 |        7 |
+|       42 |        7 |
+|       43 |        7 |
+|       44 |        7 |
+|       45 |        7 |
+|       46 |        7 |
+|       47 |        7 |
+|       48 |        7 |
+|       49 |        7 |
+|       50 |        7 |
+|       51 |        7 |
+|       52 |        7 |
+|       53 |        7 |
+|       54 |        7 |
+|       55 |        7 |
+|       56 |        7 |
+|       57 |        7 |
+|       58 |        7 |
+|       59 |        6 |
++----------+----------+
+Entity counts:
+We learned that there are 59 clients that exist and that almost every client had 7 sales except for one client that had 6.
+
+Attribute Uniqueness:
+We saw that SaleId is unique in the Sale table, since each sale appears only once. ClientId in the Sale table repeats multiple times, but that is expected since one client can have several sales. This confirms that primary keys are unique, while foreign keys repeat as part of the one-to-many relationship.
+
+What Aggregates Revealed That Simple Inspection Did Not:
+We learned that almost every client had exactly 7 sales, except for one client who had 6. This pattern was not obvious when simply looking at the joined rows with repeated names. Using aggregation helped us see how evenly the sales were distributed across clients and confirmed the one-to-many relationship numerically rather than just visually.
+
+Where Assumptions Break Down:
+We expected that clients would have different numbers of sales, but aggregation showed that almost all clients had the same number. This suggests that the data is likely structured or sample data rather than realistic real-world data, since in real life sales would probably vary more between clients.
+### Task 5 - Anomalies & Design Issues
+What design issues might exist?
+One issue I noticed is that both the Client table and the Sale table store address information. The client’s address is already saved in the Client table, but the Sale table also stores billing address fields. This means the same address data can be stored in two different places, which could lead to duplication or inconsistencies.
+
+What evidence supports your claim?
+SELECT s.SaleId, s.BillAddress, c.Address
+FROM Sale s
+JOIN Client c ON s.ClientId = c.ClientId
+WHERE s.BillAddress = c.Address
+LIMIT 35;
++--------+---------------------------------+---------------------------------+
+| SaleId | BillAddress                     | Address                         |
++--------+---------------------------------+---------------------------------+
+|     98 | Av. Brigadeiro Faria Lima, 2170 | Av. Brigadeiro Faria Lima, 2170 |
+|    121 | Av. Brigadeiro Faria Lima, 2170 | Av. Brigadeiro Faria Lima, 2170 |
+|    143 | Av. Brigadeiro Faria Lima, 2170 | Av. Brigadeiro Faria Lima, 2170 |
+|    195 | Av. Brigadeiro Faria Lima, 2170 | Av. Brigadeiro Faria Lima, 2170 |
+|    316 | Av. Brigadeiro Faria Lima, 2170 | Av. Brigadeiro Faria Lima, 2170 |
+|    327 | Av. Brigadeiro Faria Lima, 2170 | Av. Brigadeiro Faria Lima, 2170 |
+|    382 | Av. Brigadeiro Faria Lima, 2170 | Av. Brigadeiro Faria Lima, 2170 |
+|      1 | Theodor-Heuss-Straße 34         | Theodor-Heuss-Straße 34         |
+|     12 | Theodor-Heuss-Straße 34         | Theodor-Heuss-Straße 34         |
+|     67 | Theodor-Heuss-Straße 34         | Theodor-Heuss-Straße 34         |
+|    196 | Theodor-Heuss-Straße 34         | Theodor-Heuss-Straße 34         |
+|    219 | Theodor-Heuss-Straße 34         | Theodor-Heuss-Straße 34         |
+|    241 | Theodor-Heuss-Straße 34         | Theodor-Heuss-Straße 34         |
+|    293 | Theodor-Heuss-Straße 34         | Theodor-Heuss-Straße 34         |
+|     99 | 1498 rue Bélanger               | 1498 rue Bélanger               |
+|    110 | 1498 rue Bélanger               | 1498 rue Bélanger               |
+|    165 | 1498 rue Bélanger               | 1498 rue Bélanger               |
+|    294 | 1498 rue Bélanger               | 1498 rue Bélanger               |
+|    317 | 1498 rue Bélanger               | 1498 rue Bélanger               |
+|    339 | 1498 rue Bélanger               | 1498 rue Bélanger               |
+|    391 | 1498 rue Bélanger               | 1498 rue Bélanger               |
+|      2 | Ullevålsveien 14                | Ullevålsveien 14                |
+|     24 | Ullevålsveien 14                | Ullevålsveien 14                |
+|     76 | Ullevålsveien 14                | Ullevålsveien 14                |
+|    197 | Ullevålsveien 14                | Ullevålsveien 14                |
+|    208 | Ullevålsveien 14                | Ullevålsveien 14                |
+|    263 | Ullevålsveien 14                | Ullevålsveien 14                |
+|    392 | Ullevålsveien 14                | Ullevålsveien 14                |
+|     77 | Klanova 9/506                   | Klanova 9/506                   |
+|    100 | Klanova 9/506                   | Klanova 9/506                   |
+|    122 | Klanova 9/506                   | Klanova 9/506                   |
+|    174 | Klanova 9/506                   | Klanova 9/506                   |
+|    295 | Klanova 9/506                   | Klanova 9/506                   |
+|    306 | Klanova 9/506                   | Klanova 9/506                   |
+|    361 | Klanova 9/506                   | Klanova 9/506                   |
++--------+---------------------------------+---------------------------------+
+SELECT s.SaleId, s.BillAddress, c.Address
+FROM Sale s
+JOIN Client c ON s.ClientId = c.ClientId
+WHERE s.BillAddress <> c.Address;
+(This query shows Sales Where Billing Address ≠ Client Address and when used nothing is returned.)
+
+What redesign would you propose?
+If the billing address is meant to save what the client’s address was at the time of the sale, then keeping it in the Sale table makes sense. But if the billing address is always the same as the client’s address, then those billing fields probably aren’t necessary. In that case, it would be better to just use the address from the Client table to avoid storing the same data twice. Another option would be to create a separate Address table and have both Client and Sale reference it. That would keep all address information in one place and reduce redundancy.
+
+### Task 6 - Explore the Data
+Fact (1)
+State the fact clearly:
+Releases in the database vary significantly in size. The smallest release contains 1 recording, the largest contains 57 recordings, and the average release contains approximately 10 recordings.
+Provide SQL evidence:
+SELECT 
+    MIN(NumRecordings) AS MinRecordings,
+    MAX(NumRecordings) AS MaxRecordings,
+    AVG(NumRecordings) AS AvgRecordings
+FROM (
+    SELECT COUNT(*) AS NumRecordings
+    FROM Recording
+    GROUP BY ReleaseId
+) AS t;
++---------------+---------------+---------------+
+| MinRecordings | MaxRecordings | AvgRecordings |
++---------------+---------------+---------------+
+|             1 |            57 |       10.0951 |
++---------------+---------------+---------------+
+Explain why the fact is interesting:
+This is interesting because it shows that releases in the database are not all structured the same way. While the average release has about 10 recordings (which sounds like a normal album), some releases are much smaller and some are much larger. The fact that one release has as many as 57 recordings suggests there may be compilation albums, special collections, or bundled content in the database. This suggests the database includes different types of media products, such as singles, full albums, and possibly large collections. It helps give a clearer picture of how the store’s content is structured.
+
+Fact (2)
+State the fact clearly:
+Some musical styles are more profitable than others.
+Provide SQL evidence:
+SELECT 
+    s.Name AS Style,
+    SUM(si.ItemPrice * si.Quantity) AS Revenue
+FROM SaleItem si
+JOIN Recording r ON si.RecordingId = r.RecordingId
+JOIN Style s ON r.StyleId = s.StyleId
+GROUP BY s.StyleId, s.Name
+ORDER BY Revenue DESC;
++--------------------+---------+
+| Style              | Revenue |
++--------------------+---------+
+| Rock               |  826.65 |
+| Latin              |  382.14 |
+| Metal              |  261.36 |
+| Alternative & Punk |  241.56 |
+| TV Shows           |   93.53 |
+| Jazz               |   79.20 |
+| Blues              |   60.39 |
+| Drama              |   57.71 |
+| Classical          |   40.59 |
+| R&B/Soul           |   40.59 |
+| Sci Fi & Fantasy   |   39.80 |
+| Reggae             |   29.70 |
+| Pop                |   27.72 |
+| Soundtrack         |   19.80 |
+| Comedy             |   17.91 |
+| Hip Hop/Rap        |   16.83 |
+| Bossa Nova         |   14.85 |
+| Alternative        |   13.86 |
+| World              |   12.87 |
+| Science Fiction    |   11.94 |
+| Heavy Metal        |   11.88 |
+| Electronica/Dance  |   11.88 |
+| Easy Listening     |    9.90 |
+| Rock And Roll      |    5.94 |
++--------------------+---------+
+Explain why the fact is interesting:
+This fact is interesting because revenue is heavily found in a small number of styles. Rock alone generates more than double the revenue of the second-highest style (Latin). This suggests customer demand is not evenly distributed across genres, and the store only really profits on a few popular categories.
+
+Fact (3)
+State the fact clearly:
+Over 85% of all recordings are stored as MPEG audio files, while all other formats individually represent less than 7% of the dataset.
+Provide SQL evidence:
+SELECT 
+    f.Name,
+    COUNT(*) AS NumRecordings,
+    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Recording), 2) AS PercentOfTotal
+FROM Recording r
+JOIN Format f ON r.FormatId = f.FormatId
+GROUP BY f.Name
+ORDER BY NumRecordings DESC;
++-----------------------------+---------------+----------------+
+| Name                        | NumRecordings | PercentOfTotal |
++-----------------------------+---------------+----------------+
+| MPEG audio file             |          3034 |          86.61 |
+| Protected AAC audio file    |           237 |           6.77 |
+| Protected MPEG-4 video file |           214 |           6.11 |
+| AAC audio file              |            11 |           0.31 |
+| Purchased AAC audio file    |             7 |           0.20 |
++-----------------------------+---------------+----------------+
+Explain why the fact is interesting:
+This is interesting because the data is heavily concentrated in one file format. Since over 86% of recordings are MPEG audio files, it suggests the store mainly distributes content in a single standard format. The other formats make up only a small portion of the dataset, which shows they are not a major focus. This supports the idea that the database represents a digital music platform with one dominant distribution type.
+
+## Appendices
+
+### AI Traceability Log
+
+AI Used: 
+
+Interactrion 1 (Task 3): https://chatgpt.com/share/69838317-0d88-8009-8fb2-b3bc1918898a
+Interactrion 2 (Task 4): https://chatgpt.com/share/69838817-5848-8009-9858-c9d04b245d80
+Interactrion 3 (Task 5): https://chatgpt.com/share/6983ddf8-e804-8009-81b5-95e09ad693a5
+Interactrion 4 (Task 6): https://chatgpt.com/share/6983f094-1fbc-8009-a1b9-8b39e9cb6d22 
+Interactrion 5 (Task 7): https://chatgpt.com/share/6983f45e-8310-8009-a81e-5467dc0abd79
+
+Evaluation: I felt like ChatGPT did a great job assiting me in this project. I don't think I could have done as well as I had without it's help. It was very good at slowing down and explaining things to me to help get me to where I needed to from whatever level I was at in learning the material. The only thing that I would say I disliked about using it was how many queries it spat out at me at once. I became overwhelming at times when it tried explaining its think through more code than English. Overall, I give the interactions I had with Chat an 8.5/10.
+
+### SQL Log
+SHOW TABLES
+;
+DESC Client
+;
+SHOW CREATE TABLE Client\134G
+USE COSC315DD;
+SHOW TABLE;
+SHOW TABLES;
+SHOW TABLES
+;
+SHOW TABLES;
+ USE COSC315DD;
+SHOW TABLES
+;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName
+FROM Sale
+JOIN Client ON Sale.ClientId = Client.ClientId;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName FROM Sale JOIN Client ON Sale.ClientId = Client.ClientId;
+SELECT Recording.Title, Format.Name
+FROM Recording
+JOIN Format ON Recording.FormatId = Format.FormatId;
+SELECT Recording.Title, Format.Name FROM Recording JOIN Format ON Recording.FormatId = Format.FormatId;
+SELECT Recording.Name, Format.Name
+FROM Recording
+JOIN Format ON Recording.FormatId = Format.FormatId;
+SELECT Recording.Name, Format.Name FROM Recording JOIN Format ON Recording.FormatId = Format.FormatId;
+sed "s/\134\134\134040/ /g" < ~/.mysql_history
+;
+sed "s/\134\134\134040/ /g" < ~/.mysql_history
+USE COSC315DD;
+SELECT c.FirstName, c.LastName, CONCAT(s.FirstName, " ". s.LastName) AS 'Rep Name
+FROM Client c
+INNER JOIN StaFF S ON
+;
+CLEAR;
+UNDO;
+REMOVE;
+USE COSC315DD;
+SHOW TABLES;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName
+FROM Sale
+JOIN Client ON Sale.ClientId = Client.ClientId;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName FROM Sale JOIN Client ON Sale.ClientId = Client.ClientId;
+LIMIT 10;
+\134SELECT Sale.SaleId, Client.FirstName, Client.LastName
+SELECT Sale.SaleId, Client.FirstName, Client.LastName
+FROM Sale
+JOIN Client ON Sale.ClientId = Client.ClientId
+LIMIT 10;
+\134SELECT Sale.SaleId, Client.FirstName, Client.LastName SELECT Sale.SaleId, Client.FirstName, Client.LastName FROM Sale JOIN Client ON Sale.ClientId = Client.ClientId LIMIT 10;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName
+    -> FROM Sale
+    -> JOIN Client ON Sale.ClientId = Client.ClientId
+    -> LIMIT 10;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName     -> FROM Sale     -> JOIN Client ON Sale.ClientId = Client.ClientId     -> LIMIT 10;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName
+FROM Sale
+JOIN Client ON Sale.ClientId = Client.ClientId
+LIMIT 10;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName FROM Sale JOIN Client ON Sale.ClientId = Client.ClientId LIMIT 10;
+SHOW TABLES;
+USE COSC315DD;
+SHOW TABLES;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName
+FROM Sale
+JOIN Client ON Sale.ClientId = Client.ClientId
+LIMIT 15;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName FROM Sale JOIN Client ON Sale.ClientId = Client.ClientId LIMIT 15;
+USE COSC315DD;
+SELECT ClientId, COUNT(*) AS NumSales
+FROM Sale
+GROUP BY ClientId;
+SELECT ClientId, COUNT(*) AS NumSales FROM Sale GROUP BY ClientId;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName
+FROM Sale
+JOIN Client ON Sale.ClientId = Client.ClientId;
+SELECT Sale.SaleId, Client.FirstName, Client.LastName FROM Sale JOIN Client ON Sale.ClientId = Client.ClientId;
+SHOW TABLES;
+SELECT Client;
+SELECT s.SaleId, s.BillAddress, c.Address
+FROM Sale s
+JOIN Client c ON s.ClientId = c.ClientId
+WHERE s.BillAddress <> c.Address;
+SELECT s.SaleId, s.BillAddress, c.Address FROM Sale s JOIN Client c ON s.ClientId = c.ClientId WHERE s.BillAddress <> c.Address;
+SELECT s.SaleId, s.BillAddress, c.Address
+FROM Sale s
+JOIN Client c ON s.ClientId = c.ClientId
+WHERE s.BillAddress = c.Address;
+SELECT s.SaleId, s.BillAddress, c.Address FROM Sale s JOIN Client c ON s.ClientId = c.ClientId WHERE s.BillAddress = c.Address;
+SELECT s.SaleId, s.BillAddress, c.Address
+FROM Sale s
+JOIN Client c ON s.ClientId = c.ClientId
+WHERE s.BillAddress = c.Address
+LIMIT 35;
+SELECT s.SaleId, s.BillAddress, c.Address FROM Sale s JOIN Client c ON s.ClientId = c.ClientId WHERE s.BillAddress = c.Address LIMIT 35;
+SELECT SaleId, COUNT(*) AS NumItems
+FROM SaleItem
+GROUP BY SaleId
+ORDER BY NumItems DESC;
+SELECT SaleId, COUNT(*) AS NumItems FROM SaleItem GROUP BY SaleId ORDER BY NumItems DESC;
+SELECT ClientId, SUM(SaleTotal) AS TotalSpent
+FROM Sale
+GROUP BY ClientId
+ORDER BY TotalSpent DESC;
+SELECT ClientId, SUM(SaleTotal) AS TotalSpent FROM Sale GROUP BY ClientId ORDER BY TotalSpent DESC;
+SELECT SUM(SaleTotal) FROM Sale;
+SELECT ReleaseId, COUNT(*) AS NumRecordings
+FROM Recording
+GROUP BY ReleaseId
+ORDER BY NumRecordings DESC;
+SELECT ReleaseId, COUNT(*) AS NumRecordings FROM Recording GROUP BY ReleaseId ORDER BY NumRecordings DESC;
+SELECT s.Name, COUNT(*) AS NumRecordings
+FROM Recording r
+JOIN Style s ON r.StyleId = s.StyleId
+GROUP BY s.Name
+ORDER BY NumRecordings DESC;
+SELECT s.Name, COUNT(*) AS NumRecordings FROM Recording r JOIN Style s ON r.StyleId = s.StyleId GROUP BY s.Name ORDER BY NumRecordings DESC;
+SELECT r.RecordingId
+FROM Recording r
+LEFT JOIN SaleItem si ON r.RecordingId = si.RecordingId
+WHERE si.RecordingId IS NULL;
+SELECT r.RecordingId FROM Recording r LEFT JOIN SaleItem si ON r.RecordingId = si.RecordingId WHERE si.RecordingId IS NULL;
+SELECT COUNT(*)
+FROM Recording r
+LEFT JOIN SaleItem si ON r.RecordingId = si.RecordingId
+WHERE si.RecordingId IS NULL;
+SELECT COUNT(*)  FROM Recording r LEFT JOIN SaleItem si ON r.RecordingId = si.RecordingId WHERE si.RecordingId IS NULL;
+SELECT AccountRepId, COUNT(*) AS NumClients
+FROM Client
+GROUP BY AccountRepId
+ORDER BY NumClients DESC;
+SELECT AccountRepId, COUNT(*) AS NumClients FROM Client GROUP BY AccountRepId ORDER BY NumClients DESC;
+SELECT f.Name, COUNT(*) AS NumRecordings
+FROM Recording r
+JOIN Format f ON r.FormatId = f.FormatId
+GROUP BY f.Name
+ORDER BY NumRecordings DESC;
+SELECT f.Name, COUNT(*) AS NumRecordings FROM Recording r JOIN Format f ON r.FormatId = f.FormatId GROUP BY f.Name ORDER BY NumRecordings DESC;
+SELECT f.Name, COUNT(*) AS NumRecordings
+FROM Recording r
+JOIN Format f ON r.FormatId = f.FormatId
+GROUP BY f.Name
+ORDER BY NumRecordings DESC;
+SELECT f.Name, COUNT(*) AS NumRecordings FROM Recording r JOIN Format f ON r.FormatId = f.FormatId GROUP BY f.Name ORDER BY NumRecordings DESC;
+SELECT ReleaseId, COUNT(*) AS NumRecordings
+FROM Recording
+GROUP BY ReleaseId
+ORDER BY NumRecordings DESC;
+SELECT ReleaseId, COUNT(*) AS NumRecordings FROM Recording GROUP BY ReleaseId ORDER BY NumRecordings DESC;
+SELECT s.Name, COUNT(*) AS NumRecordings
+FROM Recording r
+JOIN Style s ON r.StyleId = s.StyleId
+GROUP BY s.Name
+ORDER BY NumRecordings DESC;
+SELECT s.Name, COUNT(*) AS NumRecordings FROM Recording r JOIN Style s ON r.StyleId = s.StyleId GROUP BY s.Name ORDER BY NumRecordings DESC;
+USE COSC315DD;
+SHOW TABLES;
+SELECT CONCAT('SHOW CREATE TABLE ', table_name, ';')
+FROM information_schema.tables
+WHERE table_schema = 'COSC315DD';
+SELECT CONCAT('SHOW CREATE TABLE ', table_name, ';') FROM information_schema.tables WHERE table_schema = 'COSC315DD';
+SELECT
+    table_name,
+    column_name,
+    column_type,
+    is_nullable,
+    column_key,
+    extra
+FROM information_schema.columns
+WHERE table_schema = 'COSC315DD'
+ORDER BY table_name, ordinal_position;
+SELECT     table_name,     column_name,     column_type,     is_nullable,     column_key,     extra FROM information_schema.columns WHERE table_schema = 'COSC315DD' ORDER BY table_name, ordinal_position;
+SELECT ClientId, COUNT(*) AS NumberOfSales
+FROM Sale
+GROUP BY ClientId
+HAVING COUNT(*) > 1;
+SELECT ClientId, COUNT(*) AS NumberOfSales FROM Sale GROUP BY ClientId HAVING COUNT(*) > 1;
+SELECT *
+FROM Sale s
+LEFT JOIN Client c
+  ON s.ClientId = c.ClientId
+WHERE c.ClientId IS NULL;
+SELECT * FROM Sale s LEFT JOIN Client c   ON s.ClientId = c.ClientId WHERE c.ClientId IS NULL;
+USE COSC315DD;
+SHOW TABLES;
+SELECT s.SaleId, s.BillAddress, c.Address
+FROM Sale s
+JOIN Client c ON s.ClientId = c.ClientId
+WHERE s.BillAddress <> c.Address;
+SELECT s.SaleId, s.BillAddress, c.Address FROM Sale s JOIN Client c ON s.ClientId = c.ClientId WHERE s.BillAddress <> c.Address;
+SELECT
+    s.Name AS Style,
+    SUM(si.ItemPrice * si.Quantity) AS Revenue
+FROM SaleItem si
+JOIN Recording r ON si.RecordingId = r.RecordingId
+JOIN Style s ON r.StyleId = s.StyleId
+GROUP BY s.StyleId, s.Name
+ORDER BY Revenue DESC;
+SELECT      s.Name AS Style,     SUM(si.ItemPrice * si.Quantity) AS Revenue FROM SaleItem si JOIN Recording r ON si.RecordingId = r.RecordingId JOIN Style s ON r.StyleId = s.StyleId GROUP BY s.StyleId, s.Name ORDER BY Revenue DESC;
+USE COSC315DD;
+SELECT
+    MIN(NumRecordings) AS MinRecordings,
+    MAX(NumRecordings) AS MaxRecordings,
+    AVG(NumRecordings) AS AvgRecordings
+FROM (
+    SELECT COUNT(*) AS NumRecordings
+    FROM Recording
+    GROUP BY ReleaseId
+) AS t;
+SELECT      MIN(NumRecordings) AS MinRecordings,     MAX(NumRecordings) AS MaxRecordings,     AVG(NumRecordings) AS AvgRecordings FROM (     SELECT COUNT(*) AS NumRecordings     FROM Recording     GROUP BY ReleaseId ) AS t;
+USE COSC315DD;
+SELECT
+    f.Name,
+    COUNT(*) AS NumRecordings,
+    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Recording), 2) AS PercentOfTotal
+FROM Recording r
+JOIN Format f ON r.FormatId = f.FormatId
+GROUP BY f.Name
+ORDER BY NumRecordings DESC;
+SELECT      f.Name,     COUNT(*) AS NumRecordings,     ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Recording), 2) AS PercentOfTotal FROM Recording r JOIN Format f ON r.FormatId = f.FormatId GROUP BY f.Name ORDER BY NumRecordings DESC;
+SHOW TABLES;
