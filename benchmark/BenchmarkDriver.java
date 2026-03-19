@@ -302,8 +302,4 @@ public class BenchmarkDriver {
             this.checksum = checksum;
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 5e11768d94ab9ed3e7c2f9e1c76921a9e1053776
