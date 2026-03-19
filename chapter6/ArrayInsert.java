@@ -8,18 +8,17 @@ public class ArrayInsert extends Target {
         super(arr, list, name);
     }
 
+    // insert new items at beginning of arr
     @Override
-    public int method(int[] nums) {
+    public int method(int[] indicesOrnums) {
         int sum = 0;
-        int[] larger = new int[arr.length + nums.length];
-
-        for (int i = 0; i < nums.length; i++) {
-            larger[i] = nums[i];
-            sum += nums[i];
+        int largerarray[] = new int[arr.length + indicesOrnums.length];
+        for (int i = 0; i < indicesOrnums.length; i++) {
+            largerarray[i] = indicesOrnums[i];
+            sum += largerarray[i];
         }
-
         for (int i = 0; i < arr.length; i++) {
-            larger[i + nums.length] = arr[i];
+            largerarray[i+indicesOrnums.length] = arr[i];
             sum += arr[i];
         }
         return sum;

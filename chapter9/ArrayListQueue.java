@@ -28,25 +28,18 @@ public class ArrayListQueue<T> implements Queue<T> {
 
     @Override
     public T dequeue() throws Exception {
-    if (isEmpty()) {
-        throw new Exception("Queue is empty");
-        }
-    T item = buffer.get(head);
-    buffer.set(head, null); // optional but cleaner
-    size--;
-    head = (head + 1) % buffer.size();
+        // TODO - check for empty queue
+        T item = buffer.get(head);
+        size--;
+        head = (head + 1) % buffer.size();
         return item;
     }
 
     @Override
     public T front() throws Exception {
-    if (isEmpty()) {
-        throw new Exception("Queue is empty");
-        }
+        // TODO
         return buffer.get(head);
     }
-
-
 
     @Override
     public int size() {

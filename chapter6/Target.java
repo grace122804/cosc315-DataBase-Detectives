@@ -8,10 +8,8 @@ abstract public class Target {
 
     protected int arr[];
     protected ArrayList<Integer> list;
-    protected String name; // format: array,random_access etc.
-
-    private long times[] = new long[TRIALS];
-    private int checksums[] = new int[TRIALS];
+    private String name; // must be in this format: array,random_access ... etc...
+    private long results[] = new long[TRIALS];
 
     public Target(int arr[], ArrayList<Integer> list, String name) {
         this.arr = arr;
@@ -20,33 +18,31 @@ abstract public class Target {
     }
 
     // method under test
+    // indicesOrnums is being used for two different purposes
     abstract public int method(int indicesOrnums[]);
 
+    // calls the method under test TRIALS number of times
+    // 
     public double runTests(int indicesOrnums[]) {
         long total = 0;
-
         for (int i = 0; i < TRIALS; i++) {
             long start = System.nanoTime();
             int result = method(indicesOrnums);
             long end = System.nanoTime();
-
-            long elapsed = end - start;
-            times[i] = elapsed;
-            checksums[i] = result;
+            long elapsed = end-start;
             total += elapsed;
+            results[i] = elapsed;
+            System.out.println(result);
         }
-        return total / (double) TRIALS;
+        double avg = total / (double) TRIALS;
+        return avg;
     }
 
+    // outputs the individual results to the output stream
     public void writeResults(PrintWriter out) {
         for (int i = 0; i < TRIALS; i++) {
-            out.printf(
-                "%s,%d,%.2f,%d\n",
-                name,
-                i + 1,
-                times[i] / 1_000_000.0,
-                checksums[i]
-            );
+            out.printf("%s,%d,%.2f\n", name, i+1, results[i]/1000.0);
         }
     }
+    
 }

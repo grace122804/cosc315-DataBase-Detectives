@@ -6,19 +6,22 @@ public class ArrayRemove extends Target {
 
     public ArrayRemove(int arr[], ArrayList<Integer> list, String name) {
         super(arr, list, name);
-    }
+    }    
 
+    // indicesOrnums is ignored!
+    // we are removing the first 20,000 items in the array
+    // returns the number of items removed
     @Override
-    public int method(int[] ignored) {
-        int removed = 0;
-        int[] smaller = new int[arr.length - 20_000];
-
+    public int method(int[] indicesOrnums) {
+        int result = 0;
+        int smallerarray[] = new int[arr.length - 20_000];
         for (int i = 20_000; i < arr.length; i++) {
-            smaller[i - 20_000] = arr[i];
-            removed++;
+            smallerarray[i-20_000] = arr[i];
+            result++;
         }
-        return removed;
+        return result;
     }
-}
+
 
     
+}

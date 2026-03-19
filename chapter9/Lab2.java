@@ -32,11 +32,13 @@ public class Lab2 {
 
     public static void main(String[] args) throws Exception {
         Stack<String> stack1 = new ArrayStack<>();
+        System.out.println(stack1.size());
         Stack<String> stack2 = new ListStack<>();
+        System.out.println(stack2.size());
         runStackTests(stack1, "ArrayStack");
         runStackTests(stack2, "ListStack");
 
-        Queue<String> queue1 = new ArrayListQueue<>();
+        Queue<String> queue1 = new ArrayQueue<>();
         runQueueTests(queue1, "Array Queue");
 
         Queue<Integer> queue2 = new DLinkedListQueue<>();

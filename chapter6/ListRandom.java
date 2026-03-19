@@ -6,14 +6,17 @@ public class ListRandom extends Target {
 
     public ListRandom(int arr[], ArrayList<Integer> list, String name) {
         super(arr, list, name);
-    }
+    }    
 
     @Override
-    public int method(int[] indices) {
-        int sum = 0;
-        for (int i : indices) {
-            sum += list.get(i);
+    public int method(int[] indicesOrnums) {
+        int result = 0;
+        for (int i = 0; i < indicesOrnums.length; i++) {
+            result += list.get(indicesOrnums[i]);
         }
-        return sum;
+        return result;
     }
+
+
+    
 }

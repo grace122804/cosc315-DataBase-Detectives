@@ -1,63 +1,44 @@
 package chapter6;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class ArrayVsArrayListLab {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+        try {
+            int arr[] = DataLoader.loadArray("numbers.txt");
+            ArrayList<Integer> list = DataLoader.loadArrayList("numbers.txt");
+            Random r = new Random();
+            int indices[] = new int[100_000];
+            for (int i = 0; i < indices.length; i++) {
+                indices[i] = r.nextInt(arr.length);
+            }
 
-        int[] arr = DataLoader.loadArray("numbers.txt");
-        ArrayList<Integer> list = DataLoader.loadArrayList("numbers.txt");
+            PrintWriter fileOut = new PrintWriter(new File("results.csv"));
+            Target tests[] = new Target[8];
+            double testAverages[] = new double[8];
 
-        Random r = new Random();
-        int[] data = new int[200_000];
-        for (int i = 0; i < data.length; i++) {
-            data[i] = r.nextInt(arr.length);
-        }
+            tests[0] = new ArrayRandom(arr, list, "array,random_access");
+            tests[1] = new ListRandom(arr, list, "arraylist, random_access");
+            tests[2] = new ArrayAppend(arr, list, "array,append");
+            
+            for (int i=0; i<tests.length; i++) {
+                Target target = tests[i];
+                if (target != null) {
+                    testAverages[i] = target.runTests(indices);
+                    target.writeResults(fileOut);
+                }
+            }
+            System.out.println(java.util.Arrays.toString(testAverages));
+            
 
-        PrintWriter out = new PrintWriter(new File("results.csv"));
 
-        Target[] tests = {
-            new ArrayRandom(arr, list, "array,random_access"),
-            new ListRandom(arr, list, "arraylist,random_access"),
-
-            new ArrayAppend(arr, list, "array,append"),
-            new ListAppend(arr, list, "arraylist,append"),
-
-            new ArrayInsert(arr, list, "array,insert_front"),
-            new ListInsert(arr, list, "arraylist,insert_front"),
-
-            new ArrayRemove(arr, list, "array,remove_front"),
-            new ListRemove(arr, list, "arraylist,remove_front")
-        };
-
-        double[] avgs = new double[tests.length];
-
-        for (int i = 0; i < tests.length; i++) {
-            avgs[i] = tests[i].runTests(data);
-            tests[i].writeResults(out);
-        }
-
-        out.close();
-
-        // Console summary
-        String[] ops = {
-            "random_access", "append", "insert_front", "remove_front"
-        };
-
-        for (int i = 0; i < ops.length; i++) {
-            double arrayAvg = avgs[i * 2] / 1_000_000.0;
-            double listAvg = avgs[i * 2 + 1] / 1_000_000.0;
-            String winner = arrayAvg < listAvg ? "array" : "arraylist";
-
-            System.out.printf(
-                "Operation: %s array avg: %.2f ms arraylist avg: %.2f ms winner: %s%n",
-                ops[i], arrayAvg, listAvg, winner
-            );
+            fileOut.close();
+        } catch (Exception ex) {
+            System.out.println("oh no, something went wrong");
         }
     }
 }
