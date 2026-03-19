@@ -1,4 +1,4 @@
-import chapter8.Person;
+import Chapter8.Person;
 
 public class BannerAdmin extends Person {
 

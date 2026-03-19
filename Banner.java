@@ -2,10 +2,10 @@
 
 import java.util.ArrayList;
 
-import chapter8.Faculty;
-import chapter8.Person;
-import chapter8.Staff;
-import chapter8.Student;
+import Chapter8.Faculty;
+import Chapter8.Person;
+import Chapter8.Staff;
+import Chapter8.Student;
 
 public class Banner {
     public static void main(String[] args) {
