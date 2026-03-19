@@ -1,60 +1,56 @@
-package chapter8;
+package Chapter8;
 
-// abstract forces other parts of program
-// to create a specific kind of Person
-// whenever they are constructing a person
+//abstract forces other parts of the program to
+// create a specific kind of person whenever
+// they are constructinga person
 abstract public class Person {
 
-    String name;
-    protected String id;
-    protected String addr;
-    protected String email;
+protected String name;
+protected String id;
+protected String addr;
+protected String email;
 
-    protected Person(String name, String id, String addr, String email) {
-        this.name = name;
-        this.id = id;
-        this.addr = addr;
-        this.email = email;
-    }
+protected Person(String name, String id, String addr, String email){
+this.name = name;
+this.id = id;
+this.email = email;
+this.addr = addr;
+}
 
-    abstract public String getType();
+abstract public String getType();
 
-    public String getName() {
-        return name;
-    }       
+public String getName() {
+return name;
+}
 
-    public String getId() {
-        return id;
-    }
+public String getId() {
+return id;
+}
 
-    public String getAddr() {
-        return addr;
-    }
+public String getAddr() {
+return addr;
+}
 
-    public String getEmail() {
-        return email;
-    }
+public String getEmail() {
+return email;
+}
 
-    public void setName(String name) {
-        this.name = name;
-        // execute query to update the database
-    }
+public void setName(String name) {
+this.name = name;
+}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+public void setId(String id) {
+this.id = id;
+}
 
-    public void setAddr(String addr) {
-        this.addr = addr;
-    }
+public void setAddr(String addr) {
+this.addr = addr;
+}
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    @Override
-    public String toString() {
-        return getType() + ": " + getName();
-    }
+public void setEmail(String email) {
+this.email = email;
+}
 
 }
+
+
